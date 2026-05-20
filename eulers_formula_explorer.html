@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Euler's Formula Explorer / Explorador de la Fórmula de Euler</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #F7F9FB; color: #1E293B; min-height: 100vh; }
+  header { background: #1A2E4A; color: white; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+  header div h1 { font-size: 1.2rem; font-weight: 600; }
+  header div p { font-size: 0.82rem; color: #9DC8D6; margin-top: 2px; font-style: italic; }
+  .formula-banner { background: #028090; color: white; text-align: center; padding: 0.7rem 1rem; font-size: 1.4rem; font-weight: 700; letter-spacing: .02em; }
+  .formula-banner .sub { font-size: 0.75rem; font-weight: 400; color: #A0E0E8; margin-top: 2px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; padding: 1.2rem; }
+  .card { background: white; border-radius: 12px; border: 1.5px solid #E2E8F0; overflow: hidden; transition: box-shadow .15s; }
+  .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+  .card-header { padding: 10px 14px 8px; border-bottom: 1px solid #F1F5F9; display: flex; align-items: center; gap: 10px; }
+  .card-icon { font-size: 22px; }
+  .card-title { font-size: 15px; font-weight: 600; }
+  .card-title-es { font-size: 11px; color: #94A3B8; font-style: italic; }
+  .card-tag { margin-left: auto; font-size: 10px; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
+  .tag-prism { background: #E1F5EE; color: #0F6E56; }
+  .tag-pyramid { background: #FAEEDA; color: #854F0B; }
+  .card-body { padding: 12px 14px; }
+  .counters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+  .counter { text-align: center; }
+  .counter-label { font-size: 10px; color: #94A3B8; margin-bottom: 2px; }
+  .counter-label-es { font-size: 9px; color: #CBD5E1; font-style: italic; }
+  .counter-val { font-size: 1.6rem; font-weight: 700; color: #1A2E4A; }
+  .counter-btn-row { display: flex; gap: 4px; justify-content: center; margin-top: 4px; }
+  .counter-btn { width: 26px; height: 26px; border: 1px solid #E2E8F0; border-radius: 6px; background: white; cursor: pointer; font-size: 14px; font-weight: 600; color: #64748B; transition: all .1s; display: flex; align-items: center; justify-content: center; }
+  .counter-btn:hover { background: #F1F5F9; border-color: #94A3B8; }
+  .euler-result { border-radius: 8px; padding: 10px 14px; text-align: center; font-size: 1.1rem; font-weight: 700; transition: all .3s; }
+  .euler-correct { background: #E1F5EE; color: #0F6E56; border: 2px solid #0F6E56; }
+  .euler-wrong { background: #FFF3F3; color: #A32D2D; border: 2px solid #E24B4A; }
+  .euler-neutral { background: #F1F5F9; color: #64748B; border: 2px solid #E2E8F0; }
+  .euler-result .eq { font-size: 0.85rem; margin-top: 4px; }
+  .euler-result .verdict { font-size: 0.9rem; margin-top: 4px; color: inherit; }
+  .reset-btn { font-size: 11px; padding: 3px 10px; border: 1px solid #E2E8F0; border-radius: 6px; background: white; cursor: pointer; color: #94A3B8; margin-top: 6px; }
+  .reset-btn:hover { border-color: #94A3B8; color: #64748B; }
+  .summary { background: #1A2E4A; color: white; padding: 1rem 1.5rem; margin: 0 1.2rem 1.2rem; border-radius: 12px; }
+  .summary h2 { font-size: 1rem; font-weight: 600; color: #F5A623; margin-bottom: 0.5rem; }
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .summary-stat { text-align: center; }
+  .summary-stat .n { font-size: 2rem; font-weight: 700; color: #02C39A; }
+  .summary-stat .l { font-size: 11px; color: #9DC8D6; }
+  .pattern-box { background: #243552; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #B0C4D8; line-height: 1.6; }
+  .pattern-box strong { color: #F5A623; }
+  .svg-mini { display: flex; justify-content: center; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🔢 Euler's Formula Explorer / Explorador de la Fórmula de Euler</h1>
+    <p>Count faces, edges, and vertices — discover the pattern! / ¡Cuenta caras, aristas y vértices — descubre el patrón!</p>
+  </div>
+</header>
+<div class="formula-banner">
+  F + V − E = 2 &nbsp;&nbsp; (Faces + Vertices − Edges = 2)
+  <div class="sub">Works for all convex polyhedra / Funciona para todos los poliedros convexos</div>
+</div>
+
+<div style="background:#E6F1FB;border-left:4px solid #185FA5;padding:10px 16px;margin:1rem 1.2rem 0;border-radius:4px;font-size:13px;color:#185FA5;">
+  <strong>Your task / Tu tarea:</strong> Count the faces, edges, and vertices of each solid. Adjust the numbers with the + / − buttons until Euler's formula checks out! / Ajusta los números hasta que la fórmula de Euler funcione.
+</div>
+
+<div class="grid" id="cards"></div>
+
+<div class="summary">
+  <h2>Pattern / Patrón</h2>
+  <div class="summary-grid">
+    <div class="summary-stat"><div class="n" id="s-correct">0</div><div class="l">Solids verified / Sólidos verificados</div></div>
+    <div class="summary-stat"><div class="n" id="s-total">6</div><div class="l">Total solids / Total sólidos</div></div>
+    <div class="summary-stat"><div class="n">2</div><div class="l">Always the answer! / ¡Siempre la respuesta!</div></div>
+  </div>
+  <div class="pattern-box" style="margin-top:12px;" id="pattern-text">
+    Verify each solid above to unlock the pattern / Verifica cada sólido para descubrir el patrón...
+  </div>
+</div>
+
+<script>
+const SOLIDS = [
+  { id:'cube', name:'Cube', nameEs:'Cubo', icon:'⬛', tag:'Prism',
+    faces:6, edges:12, verts:8,
+    hint:'A cube has 6 square faces, 8 corners, and 12 edges where faces meet.',
+    hintEs:'Un cubo tiene 6 caras cuadradas, 8 esquinas y 12 aristas.',
+    color:'#185FA5', bg:'#E6F1FB',
+    svg:`<polygon points="40,70 90,70 90,30 40,30" fill="#B5D4F480" stroke="#185FA5" stroke-width="1.5"/>
+         <polygon points="40,30 60,12 110,12 90,30" fill="#85B7EB80" stroke="#185FA5" stroke-width="1.5"/>
+         <polygon points="90,30 110,12 110,52 90,70" fill="#378ADD80" stroke="#185FA5" stroke-width="1.5"/>` },
+  { id:'rect-prism', name:'Rectangular Prism', nameEs:'Prisma rectangular', icon:'📦', tag:'Prism',
+    faces:6, edges:12, verts:8,
+    hint:'Like a box — 6 rectangular faces (top, bottom, front, back, left, right), 8 corners, 12 edges.',
+    hintEs:'Como una caja — 6 caras rectangulares, 8 esquinas, 12 aristas.',
+    color:'#0F6E56', bg:'#E1F5EE',
+    svg:`<polygon points="30,75 90,75 90,30 30,30" fill="#9FE1CB80" stroke="#0F6E56" stroke-width="1.5"/>
+         <polygon points="30,30 50,12 110,12 90,30" fill="#5DCAA580" stroke="#0F6E56" stroke-width="1.5"/>
+         <polygon points="90,30 110,12 110,52 90,75" fill="#1D9E7580" stroke="#0F6E56" stroke-width="1.5"/>` },
+  { id:'tri-prism', name:'Triangular Prism', nameEs:'Prisma triangular', icon:'🔺', tag:'Prism',
+    faces:5, edges:9, verts:6,
+    hint:'2 triangular bases + 3 rectangular sides = 5 faces. Count 6 vertices (3 per triangle), 9 edges.',
+    hintEs:'2 bases triangulares + 3 lados rectangulares = 5 caras. 6 vértices, 9 aristas.',
+    color:'#993C1D', bg:'#FAECE7',
+    svg:`<polygon points="65,12 20,75 110,75" fill="#F5C4B380" stroke="#993C1D" stroke-width="1.5"/>
+         <polygon points="65,12 110,75 95,62 50,62" fill="#F0997B80" stroke="#993C1D" stroke-width="1.5"/>
+         <polygon points="20,75 50,62 95,62 110,75" fill="#D85A3080" stroke="#993C1D" stroke-width="1.5"/>` },
+  { id:'sq-pyramid', name:'Square Pyramid', nameEs:'Pirámide cuadrada', icon:'🔷', tag:'Pyramid',
+    faces:5, edges:8, verts:5,
+    hint:'1 square base + 4 triangular faces = 5 faces. 5 vertices (4 base corners + apex), 8 edges.',
+    hintEs:'1 base cuadrada + 4 caras triangulares = 5 caras. 5 vértices, 8 aristas.',
+    color:'#854F0B', bg:'#FAEEDA',
+    svg:`<polygon points="65,12 25,75 105,75" fill="#FAC77580" stroke="#854F0B" stroke-width="1.5"/>
+         <polygon points="65,12 105,75 90,65 40,65" fill="#EF9F2780" stroke="#854F0B" stroke-width="1.5"/>
+         <polygon points="25,75 40,65 90,65 105,75" fill="#BA751780" stroke="#854F0B" stroke-width="1.5"/>` },
+  { id:'tri-pyramid', name:'Triangular Pyramid', nameEs:'Pirámide triangular', icon:'▲', tag:'Pyramid',
+    faces:4, edges:6, verts:4,
+    hint:'All 4 faces are triangles! 4 vertices (3 base corners + apex), 6 edges.',
+    hintEs:'¡Las 4 caras son triángulos! 4 vértices (3 base + ápice), 6 aristas.',
+    color:'#534AB7', bg:'#EEEDFE',
+    svg:`<polygon points="65,10 20,80 110,80" fill="#CECBF680" stroke="#534AB7" stroke-width="1.5"/>
+         <polygon points="65,10 110,80 80,88" fill="#AFA9EC80" stroke="#534AB7" stroke-width="1.5"/>
+         <polygon points="20,80 80,88 110,80" fill="#7F77DD80" stroke="#534AB7" stroke-width="1.5"/>` },
+  { id:'hex-prism', name:'Hexagonal Prism', nameEs:'Prisma hexagonal', icon:'⬡', tag:'Prism',
+    faces:8, edges:18, verts:12,
+    hint:'2 hexagonal bases + 6 rectangular faces = 8 faces. 12 vertices, 18 edges.',
+    hintEs:'2 bases hexagonales + 6 caras rectangulares = 8 caras. 12 vértices, 18 aristas.',
+    color:'#3B6D11', bg:'#EAF3DE',
+    svg:`<polygon points="65,14 85,25 85,48 65,58 45,48 45,25" fill="#C0DD9780" stroke="#3B6D11" stroke-width="1.5"/>
+         <polygon points="85,25 100,35 100,58 85,68 65,58 85,48" fill="#97C45980" stroke="#3B6D11" stroke-width="1.5"/>
+         <polygon points="65,58 85,68 100,58 85,48" fill="#63992280" stroke="#3B6D11" stroke-width="1.5"/>` },
+];
+
+const state = {};
+SOLIDS.forEach(s => {
+  state[s.id] = { f: 1, v: 1, e: 1, verified: false };
+});
+
+function euler(f,v,e) { return f+v-e; }
+
+function renderCard(s) {
+  const st = state[s.id];
+  const result = euler(st.f, st.v, st.e);
+  const correct = result === 2;
+  const locked = st.verified;
+  let resultClass = 'euler-neutral', verdict = '';
+  if (st.f === s.faces && st.v === s.verts && st.e === s.edges) {
+    resultClass = 'euler-correct';
+    verdict = '✓ Euler\'s Formula holds! / ¡La fórmula de Euler se cumple!';
+  } else if (result === 2) {
+    resultClass = 'euler-correct';
+    verdict = '✓ Formula holds — but check your counts! / La fórmula aplica — ¡pero revisa tus conteos!';
+  } else {
+    resultClass = 'euler-wrong';
+    verdict = `F+V−E = ${result} ≠ 2 — keep counting! / ¡Sigue contando!`;
+  }
+
+  return `
+  <div class="card" id="card-${s.id}" style="border-color:${s.color}30">
+    <div class="card-header" style="background:${s.bg}">
+      <span class="card-icon">${s.icon}</span>
+      <div>
+        <div class="card-title" style="color:${s.color}">${s.name}</div>
+        <div class="card-title-es">${s.nameEs}</div>
+      </div>
+      <span class="card-tag ${s.tag==='Prism'?'tag-prism':'tag-pyramid'}">${s.tag}</span>
+    </div>
+    <div class="card-body">
+      <div class="svg-mini">
+        <svg width="130" height="95" viewBox="0 0 130 95">${s.svg}</svg>
+      </div>
+      <div class="counters">
+        <div class="counter">
+          <div class="counter-label">Faces<br><span class="counter-label-es">Caras (F)</span></div>
+          <div class="counter-val" id="f-${s.id}">${st.f}</div>
+          <div class="counter-btn-row">
+            <button class="counter-btn" onclick="adjust('${s.id}','f',-1)">−</button>
+            <button class="counter-btn" onclick="adjust('${s.id}','f',1)">+</button>
+          </div>
+        </div>
+        <div class="counter">
+          <div class="counter-label">Vertices<br><span class="counter-label-es">Vértices (V)</span></div>
+          <div class="counter-val" id="v-${s.id}">${st.v}</div>
+          <div class="counter-btn-row">
+            <button class="counter-btn" onclick="adjust('${s.id}','v',-1)">−</button>
+            <button class="counter-btn" onclick="adjust('${s.id}','v',1)">+</button>
+          </div>
+        </div>
+        <div class="counter">
+          <div class="counter-label">Edges<br><span class="counter-label-es">Aristas (E)</span></div>
+          <div class="counter-val" id="e-${s.id}">${st.e}</div>
+          <div class="counter-btn-row">
+            <button class="counter-btn" onclick="adjust('${s.id}','e',-1)">−</button>
+            <button class="counter-btn" onclick="adjust('${s.id}','e',1)">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="euler-result ${resultClass}">
+        <div>${st.f} + ${st.v} − ${st.e} = <strong>${result}</strong></div>
+        <div class="verdict">${verdict}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+        <button class="reset-btn" onclick="resetCard('${s.id}')">↺ Reset</button>
+        <button class="reset-btn" style="color:${s.color};border-color:${s.color}" onclick="showHint('${s.id}')">💡 Hint / Pista</button>
+      </div>
+      <div id="hint-${s.id}" style="display:none;margin-top:8px;padding:8px 10px;background:${s.bg};border-radius:6px;font-size:12px;color:${s.color};line-height:1.5;">
+        ${s.hint}<br><em style="color:#94A3B8">${s.hintEs}</em>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderAll() {
+  document.getElementById('cards').innerHTML = SOLIDS.map(renderCard).join('');
+  updateSummary();
+}
+
+function adjust(id, key, delta) {
+  state[id][key] = Math.max(1, state[id][key] + delta);
+  const s = SOLIDS.find(x=>x.id===id);
+  const st = state[id];
+  const result = euler(st.f, st.v, st.e);
+  const correct = st.f===s.faces && st.v===s.verts && st.e===s.edges;
+  document.getElementById(`f-${id}`).textContent = st.f;
+  document.getElementById(`v-${id}`).textContent = st.v;
+  document.getElementById(`e-${id}`).textContent = st.e;
+
+  let resultClass = 'euler-neutral', verdict = '';
+  if (correct) { resultClass='euler-correct'; verdict='✓ Euler\'s Formula holds! / ¡La fórmula de Euler se cumple!'; }
+  else if (result===2) { resultClass='euler-correct'; verdict='✓ Formula holds — but check your counts! / ¡Revisa tus conteos!'; }
+  else { resultClass='euler-wrong'; verdict=`F+V−E = ${result} ≠ 2 — keep counting! / ¡Sigue contando!`; }
+
+  const card = document.getElementById(`card-${id}`);
+  const er = card.querySelector('.euler-result');
+  er.className = `euler-result ${resultClass}`;
+  er.innerHTML = `<div>${st.f} + ${st.v} − ${st.e} = <strong>${result}</strong></div><div class="verdict">${verdict}</div>`;
+  if (correct) state[id].verified = true;
+  updateSummary();
+}
+
+function resetCard(id) {
+  state[id] = { f:1, v:1, e:1, verified:false };
+  document.getElementById(`hint-${id}`).style.display='none';
+  renderAll();
+}
+
+function showHint(id) {
+  const h = document.getElementById(`hint-${id}`);
+  h.style.display = h.style.display==='none'?'block':'none';
+}
+
+function updateSummary() {
+  const correct = SOLIDS.filter(s=>{
+    const st=state[s.id];
+    return st.f===s.faces && st.v===s.verts && st.e===s.edges;
+  }).length;
+  document.getElementById('s-correct').textContent = correct;
+  if (correct === SOLIDS.length) {
+    document.getElementById('pattern-text').innerHTML = `<strong>Pattern discovered! / ¡Patrón descubierto!</strong><br><br>
+    For every convex polyhedron: <strong>F + V − E always equals 2.</strong><br>
+    This was proven by the mathematician Leonhard Euler in 1758.<br><br>
+    <em>Para todo poliedro convexo: <strong>F + V − E siempre es igual a 2.</strong><br>
+    Esto fue demostrado por el matemático Leonhard Euler en 1758.</em>`;
+  } else if (correct > 2) {
+    document.getElementById('pattern-text').innerHTML = `You're seeing a pattern: F + V − E = <strong>2</strong> every time!<br>
+    <em>¡Estás viendo un patrón: F + V − E = 2 siempre!</em><br>
+    Verify all ${SOLIDS.length} solids to unlock the full explanation. / Verifica los ${SOLIDS.length} sólidos para ver la explicación completa.`;
+  }
+}
+
+renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cross Section Slicer / Cortador de Secciones</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #F7F9FB; color: #1E293B; min-height: 100vh; }
+  header { background: #1A2E4A; color: white; padding: 1rem 1.5rem; }
+  header h1 { font-size: 1.3rem; font-weight: 600; }
+  header p { font-size: 0.85rem; color: #9DC8D6; margin-top: 2px; font-style: italic; }
+  .main { display: grid; grid-template-columns: 220px 1fr 260px; gap: 0; min-height: calc(100vh - 72px); }
+  .sidebar { background: #fff; border-right: 1px solid #E2E8F0; padding: 1rem; }
+  .sidebar h3 { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #64748B; margin-bottom: 0.6rem; }
+  .solid-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border: 1px solid #E2E8F0; border-radius: 8px; background: #fff; cursor: pointer; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: #1E293B; transition: all .15s; }
+  .solid-btn:hover { background: #F1F5F9; border-color: #94A3B8; }
+  .solid-btn.active { background: #E6F1FB; border-color: #185FA5; color: #185FA5; }
+  .solid-btn .icon { font-size: 18px; width: 24px; text-align: center; }
+  .solid-btn .sub { font-size: 10px; color: #94A3B8; font-style: italic; font-weight: 400; }
+  .canvas-area { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; gap: 1rem; }
+  .cut-controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .cut-btn { padding: 6px 14px; border: 1.5px solid #E2E8F0; border-radius: 20px; background: #fff; cursor: pointer; font-size: 12px; font-weight: 500; color: #64748B; transition: all .15s; }
+  .cut-btn:hover { border-color: #028090; color: #028090; }
+  .cut-btn.active { background: #028090; border-color: #028090; color: white; }
+  .svg-wrap { background: white; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px; }
+  .info-panel { background: #1A2E4A; color: white; padding: 1.2rem; overflow-y: auto; }
+  .info-panel h3 { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #9DC8D6; margin-bottom: 0.8rem; }
+  .result-shape { background: #028090; border-radius: 8px; padding: 10px 14px; margin-bottom: 1rem; }
+  .result-shape .label { font-size: 10px; color: #A0E0E8; margin-bottom: 2px; }
+  .result-shape .name { font-size: 1.2rem; font-weight: 700; }
+  .result-shape .name-es { font-size: 0.85rem; font-style: italic; color: #A0E0E8; }
+  .why-box { background: #243552; border-radius: 8px; padding: 10px 14px; margin-bottom: 1rem; font-size: 12px; line-height: 1.55; color: #B0C4D8; }
+  .why-box strong { color: #F5A623; }
+  .frame-box { border: 1px solid #2D4A6E; border-radius: 8px; padding: 10px 14px; margin-bottom: 1rem; }
+  .frame-box .fl { font-size: 10px; color: #9DC8D6; margin-bottom: 4px; }
+  .frame-box .ft { font-size: 12px; color: white; line-height: 1.5; }
+  .frame-box .ftes { font-size: 11px; color: #9DC8D6; font-style: italic; margin-top: 4px; line-height: 1.5; }
+  .key-term { display: flex; gap: 6px; align-items: baseline; margin-bottom: 6px; }
+  .key-term .en { font-size: 12px; font-weight: 600; color: #02C39A; min-width: 100px; }
+  .key-term .es { font-size: 11px; color: #9DC8D6; font-style: italic; }
+</style>
+</head>
+<body>
+<header>
+  <h1>✂️ Cross Section Slicer / Cortador de Secciones</h1>
+  <p>Choose a solid, choose a cut — see what shape appears / Elige un sólido, elige un corte — ve qué forma aparece</p>
+</header>
+<div class="main">
+  <div class="sidebar">
+    <h3>Solid / Sólido</h3>
+    <button class="solid-btn active" onclick="selectSolid('rect-prism')" id="sb-rect-prism">
+      <span class="icon">📦</span><span><div>Rectangular Prism</div><div class="sub">Prisma rectangular</div></span>
+    </button>
+    <button class="solid-btn" onclick="selectSolid('cube')" id="sb-cube">
+      <span class="icon">⬛</span><span><div>Cube</div><div class="sub">Cubo</div></span>
+    </button>
+    <button class="solid-btn" onclick="selectSolid('tri-prism')" id="sb-tri-prism">
+      <span class="icon">🔺</span><span><div>Triangular Prism</div><div class="sub">Prisma triangular</div></span>
+    </button>
+    <button class="solid-btn" onclick="selectSolid('sq-pyramid')" id="sb-sq-pyramid">
+      <span class="icon">🔷</span><span><div>Square Pyramid</div><div class="sub">Pirámide cuadrada</div></span>
+    </button>
+    <button class="solid-btn" onclick="selectSolid('cone')" id="sb-cone">
+      <span class="icon">🔔</span><span><div>Cone</div><div class="sub">Cono</div></span>
+    </button>
+    <button class="solid-btn" onclick="selectSolid('cylinder')" id="sb-cylinder">
+      <span class="icon">🥫</span><span><div>Cylinder</div><div class="sub">Cilindro</div></span>
+    </button>
+
+    <h3 style="margin-top:1rem;">Key Terms / Términos</h3>
+    <div class="key-term"><span class="en">Cross section</span><span class="es">Sección transversal</span></div>
+    <div class="key-term"><span class="en">Parallel / ∥</span><span class="es">Paralelo</span></div>
+    <div class="key-term"><span class="en">Perpendicular / ⊥</span><span class="es">Perpendicular</span></div>
+    <div class="key-term"><span class="en">Diagonal</span><span class="es">Diagonal</span></div>
+    <div class="key-term"><span class="en">Plane</span><span class="es">Plano</span></div>
+  </div>
+
+  <div class="canvas-area">
+    <div class="cut-controls" id="cut-controls"></div>
+    <div class="svg-wrap">
+      <svg id="main-svg" width="460" height="380" viewBox="0 0 460 380"></svg>
+    </div>
+    <div style="font-size:11px;color:#94A3B8;text-align:center;">The blue plane shows where the cut happens / El plano azul muestra dónde ocurre el corte</div>
+  </div>
+
+  <div class="info-panel">
+    <h3>Cross Section Result</h3>
+    <div class="result-shape">
+      <div class="label">Shape formed / Figura formada</div>
+      <div class="name" id="r-name">Rectangle</div>
+      <div class="name-es" id="r-name-es">Rectángulo</div>
+    </div>
+    <div class="why-box" id="r-why"></div>
+    <div class="frame-box">
+      <div class="fl">Sentence frame / Marco de oración</div>
+      <div class="ft" id="r-frame"></div>
+      <div class="ftes" id="r-frame-es"></div>
+    </div>
+    <h3>Cross section preview</h3>
+    <div style="background:#243552;border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:center;min-height:100px;">
+      <svg id="cs-svg" width="180" height="100" viewBox="0 0 180 100"></svg>
+    </div>
+  </div>
+</div>
+
+<script>
+const CUTS = {
+  'rect-prism': [
+    { label:'∥ to base', labelEs:'Paralelo a la base', result:'Rectangle', resultEs:'Rectángulo',
+      why:'A plane parallel to the base slices through all 4 vertical sides, creating a rectangle with the same width and length as the base.',
+      frame:'When I cut the rectangular prism parallel to the base, the cross section is a ___rectangle___.',
+      frameEs:'Cuando corto el prisma rectangular paralelo a la base, la sección transversal es un ___rectángulo___.',
+      drawSolid: drawRectPrism, drawCut: drawRectPrismParallel, drawCS: drawRectCS },
+    { label:'⊥ to base', labelEs:'Perpendicular a la base', result:'Rectangle', resultEs:'Rectángulo',
+      why:'A vertical cut through the prism slices through the top, bottom, and two side faces — forming a rectangle whose height equals the solid\'s height.',
+      frame:'When I cut the rectangular prism perpendicular to the base, the cross section is a ___rectangle___.',
+      frameEs:'Cuando corto el prisma perpendicular a la base, la sección transversal es un ___rectángulo___.',
+      drawSolid: drawRectPrism, drawCut: drawRectPrismPerp, drawCS: drawRectCS },
+    { label:'Diagonal', labelEs:'Diagonal', result:'Parallelogram', resultEs:'Paralelogramo',
+      why:'A diagonal cut slants across the prism, producing a parallelogram — the four sides are still straight, but the angles are no longer 90°.',
+      frame:'When I cut the rectangular prism diagonally, the cross section is a ___parallelogram___.',
+      frameEs:'Cuando corto el prisma diagonalmente, la sección transversal es un ___paralelogramo___.',
+      drawSolid: drawRectPrism, drawCut: drawRectPrismDiag, drawCS: drawParallelCS },
+  ],
+  'cube': [
+    { label:'∥ to base', labelEs:'Paralelo a la base', result:'Square', resultEs:'Cuadrado',
+      why:'Since all faces of a cube are equal squares, a cut parallel to any base creates a perfect square cross section.',
+      frame:'When I cut the cube parallel to the base, the cross section is a ___square___.',
+      frameEs:'Cuando corto el cubo paralelo a la base, la sección transversal es un ___cuadrado___.',
+      drawSolid: drawCube, drawCut: drawCubeParallel, drawCS: drawSquareCS },
+    { label:'⊥ to base', labelEs:'Perpendicular a la base', result:'Square', resultEs:'Cuadrado',
+      why:'A vertical cut through a cube also produces a square, since all dimensions of a cube are equal.',
+      frame:'When I cut the cube perpendicular to the base, the cross section is a ___square___.',
+      frameEs:'Cuando corto el cubo perpendicular a la base, la sección transversal es un ___cuadrado___.',
+      drawSolid: drawCube, drawCut: drawCubePerp, drawCS: drawSquareCS },
+    { label:'Corner diagonal', labelEs:'Diagonal de esquina a esquina', result:'Rectangle', resultEs:'Rectángulo',
+      why:'A diagonal cut from one edge to the opposite edge on a cube produces a rectangle (actually a golden rectangle) because the diagonal crosses more distance.',
+      frame:'When I cut the cube at a diagonal, the cross section is a ___rectangle___.',
+      frameEs:'Cuando corto el cubo diagonalmente, la sección transversal es un ___rectángulo___.',
+      drawSolid: drawCube, drawCut: drawCubeDiag, drawCS: drawRectCS },
+  ],
+  'tri-prism': [
+    { label:'∥ to base', labelEs:'Paralelo a la base', result:'Triangle', resultEs:'Triángulo',
+      why:'A cut parallel to the triangular base of a triangular prism slices through to reveal the same triangular shape as the base.',
+      frame:'When I cut the triangular prism parallel to the base, the cross section is a ___triangle___.',
+      frameEs:'Cuando corto el prisma triangular paralelo a la base, la sección transversal es un ___triángulo___.',
+      drawSolid: drawTriPrism, drawCut: drawTriPrismParallel, drawCS: drawTriCS },
+    { label:'⊥ to base', labelEs:'Perpendicular a la base', result:'Rectangle', resultEs:'Rectángulo',
+      why:'A cut perpendicular to the length of the prism slices through the three rectangular faces, creating a rectangle.',
+      frame:'When I cut the triangular prism perpendicular to its length, the cross section is a ___rectangle___.',
+      frameEs:'Cuando corto el prisma triangular perpendicular a su longitud, la sección transversal es un ___rectángulo___.',
+      drawSolid: drawTriPrism, drawCut: drawTriPrismPerp, drawCS: drawRectCS },
+  ],
+  'sq-pyramid': [
+    { label:'∥ to base', labelEs:'Paralelo a la base', result:'Square', resultEs:'Cuadrado',
+      why:'Any horizontal cut through a square pyramid (parallel to its square base) reveals a smaller square — the pyramid gets narrower toward the apex.',
+      frame:'When I cut the square pyramid parallel to the base, the cross section is a ___square___ (smaller near the top).',
+      frameEs:'Cuando corto la pirámide cuadrada paralelo a la base, la sección transversal es un ___cuadrado___ (más pequeño cerca de la cima).',
+      drawSolid: drawSqPyramid, drawCut: drawSqPyrParallel, drawCS: drawSquareCS },
+    { label:'Through apex & base', labelEs:'Por el ápice y la base', result:'Triangle', resultEs:'Triángulo',
+      why:'A vertical cut through the apex and the center of the base creates a triangle — you see the slanted face and the base edge.',
+      frame:'When I cut the square pyramid through the apex and center, the cross section is a ___triangle___.',
+      frameEs:'Cuando corto la pirámide cuadrada por el ápice y el centro, la sección transversal es un ___triángulo___.',
+      drawSolid: drawSqPyramid, drawCut: drawSqPyrApex, drawCS: drawTriCS },
+  ],
+  'cone': [
+    { label:'∥ to base', labelEs:'Paralelo a la base', result:'Circle', resultEs:'Círculo',
+      why:'A cone has a circular base. Any horizontal cut creates a circle — smaller circles near the apex, the full circle at the base.',
+      frame:'When I cut the cone parallel to the base, the cross section is a ___circle___.',
+      frameEs:'Cuando corto el cono paralelo a la base, la sección transversal es un ___círculo___.',
+      drawSolid: drawCone, drawCut: drawConeParallel, drawCS: drawCircleCS },
+    { label:'Through apex', labelEs:'Por el ápice', result:'Triangle', resultEs:'Triángulo',
+      why:'A vertical cut through the apex and center of a cone reveals an isosceles triangle — two slanted sides and the diameter as the base.',
+      frame:'When I cut the cone through its apex, the cross section is a ___triangle___.',
+      frameEs:'Cuando corto el cono por su ápice, la sección transversal es un ___triángulo___.',
+      drawSolid: drawCone, drawCut: drawConeApex, drawCS: drawTriCS },
+    { label:'Angled', labelEs:'Inclinado', result:'Ellipse', resultEs:'Elipse',
+      why:'An angled cut (not parallel to the base) through a cone creates an ellipse — a stretched oval. This is one of the famous conic sections!',
+      frame:'When I cut the cone at an angle, the cross section is an ___ellipse___.',
+      frameEs:'Cuando corto el cono en ángulo, la sección transversal es una ___elipse___.',
+      drawSolid: drawCone, drawCut: drawConeAngle, drawCS: drawEllipseCS },
+  ],
+  'cylinder': [
+    { label:'∥ to base', labelEs:'Paralelo a la base', result:'Circle', resultEs:'Círculo',
+      why:'The cylinder has circular bases. A horizontal cut reveals the same circle throughout its height.',
+      frame:'When I cut the cylinder parallel to the base, the cross section is a ___circle___.',
+      frameEs:'Cuando corto el cilindro paralelo a la base, la sección transversal es un ___círculo___.',
+      drawSolid: drawCylinder, drawCut: drawCylParallel, drawCS: drawCircleCS },
+    { label:'⊥ to base', labelEs:'Perpendicular a la base', result:'Rectangle', resultEs:'Rectángulo',
+      why:'A vertical cut through the length of the cylinder reveals a rectangle — the height of the rectangle equals the cylinder\'s height, the width equals its diameter.',
+      frame:'When I cut the cylinder perpendicular to the base, the cross section is a ___rectangle___.',
+      frameEs:'Cuando corto el cilindro perpendicular a la base, la sección transversal es un ___rectángulo___.',
+      drawSolid: drawCylinder, drawCut: drawCylPerp, drawCS: drawRectCS },
+  ],
+};
+
+let currentSolid = 'rect-prism';
+let currentCut = 0;
+
+function selectSolid(id) {
+  currentSolid = id;
+  currentCut = 0;
+  document.querySelectorAll('.solid-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sb-'+id).classList.add('active');
+  renderCutControls();
+  render();
+}
+
+function selectCut(i) {
+  currentCut = i;
+  document.querySelectorAll('.cut-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.cut-btn')[i].classList.add('active');
+  render();
+}
+
+function renderCutControls() {
+  const cuts = CUTS[currentSolid];
+  const ctrl = document.getElementById('cut-controls');
+  ctrl.innerHTML = cuts.map((c,i) => `<button class="cut-btn${i===0?' active':''}" onclick="selectCut(${i})">${c.label}<br><span style="font-size:10px;opacity:.7">${c.labelEs}</span></button>`).join('');
+}
+
+function render() {
+  const cut = CUTS[currentSolid][currentCut];
+  const svg = document.getElementById('main-svg');
+  svg.innerHTML = '';
+  cut.drawSolid(svg);
+  cut.drawCut(svg);
+
+  document.getElementById('r-name').textContent = cut.result;
+  document.getElementById('r-name-es').textContent = cut.resultEs;
+  document.getElementById('r-why').innerHTML = `<strong>Why?</strong> ${cut.why}`;
+  document.getElementById('r-frame').textContent = cut.frame;
+  document.getElementById('r-frame-es').textContent = cut.frameEs;
+
+  const cs = document.getElementById('cs-svg');
+  cs.innerHTML = '';
+  cut.drawCS(cs);
+}
+
+// ── Drawing helpers ───────────────────────────────────────────────────
+function poly(svg, pts, fill, stroke, sw=1.5, dasharray='') {
+  const el = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  el.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
+  el.setAttribute('fill', fill);
+  el.setAttribute('stroke', stroke);
+  el.setAttribute('stroke-width', sw);
+  if(dasharray) el.setAttribute('stroke-dasharray', dasharray);
+  svg.appendChild(el);
+}
+function line(svg, x1,y1,x2,y2, stroke, sw=1.5, dasharray='') {
+  const el = document.createElementNS('http://www.w3.org/2000/svg','line');
+  el.setAttribute('x1',x1); el.setAttribute('y1',y1);
+  el.setAttribute('x2',x2); el.setAttribute('y2',y2);
+  el.setAttribute('stroke', stroke); el.setAttribute('stroke-width', sw);
+  if(dasharray) el.setAttribute('stroke-dasharray', dasharray);
+  el.setAttribute('fill','none');
+  svg.appendChild(el);
+}
+function rect(svg, x,y,w,h, fill, stroke, sw=1.5) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  el.setAttribute('x',x); el.setAttribute('y',y);
+  el.setAttribute('width',w); el.setAttribute('height',h);
+  el.setAttribute('fill',fill); el.setAttribute('stroke',stroke);
+  el.setAttribute('stroke-width',sw);
+  svg.appendChild(el);
+}
+function ellipse(svg, cx,cy,rx,ry, fill, stroke, sw=1.5, dasharray='') {
+  const el = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+  el.setAttribute('cx',cx); el.setAttribute('cy',cy);
+  el.setAttribute('rx',rx); el.setAttribute('ry',ry);
+  el.setAttribute('fill',fill); el.setAttribute('stroke',stroke);
+  el.setAttribute('stroke-width',sw);
+  if(dasharray) el.setAttribute('stroke-dasharray', dasharray);
+  svg.appendChild(el);
+}
+function path(svg, d, fill, stroke, sw=1.5, dasharray='') {
+  const el = document.createElementNS('http://www.w3.org/2000/svg','path');
+  el.setAttribute('d',d); el.setAttribute('fill',fill);
+  el.setAttribute('stroke',stroke); el.setAttribute('stroke-width',sw);
+  if(dasharray) el.setAttribute('stroke-dasharray',dasharray);
+  svg.appendChild(el);
+}
+function text(svg, x,y,t,color='#1E293B',size=13,bold=false) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg','text');
+  el.setAttribute('x',x); el.setAttribute('y',y);
+  el.setAttribute('fill',color); el.setAttribute('font-size',size);
+  el.setAttribute('font-family','Segoe UI,system-ui,sans-serif');
+  el.setAttribute('text-anchor','middle');
+  if(bold) el.setAttribute('font-weight','600');
+  el.textContent = t;
+  svg.appendChild(el);
+}
+
+// ── RECT PRISM ────────────────────────────────────────────────────────
+function drawRectPrism(svg) {
+  const ox=160, oy=100, w=140, h=130, d=60;
+  poly(svg, [[ox,oy+h],[ox+w,oy+h],[ox+w,oy],[ox,oy]], '#B5D4F4', '#185FA5', 1.5);
+  poly(svg, [[ox,oy],[ox+d,oy-d],[ox+w+d,oy-d],[ox+w,oy]], '#85B7EB', '#185FA5', 1.5);
+  poly(svg, [[ox+w,oy],[ox+w+d,oy-d],[ox+w+d,oy+h-d],[ox+w,oy+h]], '#378ADD', '#185FA5', 1.5);
+  line(svg, ox,oy+h,ox+d,oy+h-d,'#185FA5',1,'4 3');
+  line(svg, ox+d,oy+h-d,ox+w+d,oy+h-d,'#185FA5',1,'4 3');
+  line(svg, ox+d,oy+h-d,ox+d,oy-d,'#185FA5',1,'4 3');
+}
+function drawRectPrismParallel(svg) {
+  drawRectPrism(svg);
+  const ox=160, oy=100, w=140, h=130, d=60, cy=oy+55;
+  // Plane quad
+  poly(svg, [[ox,cy],[ox+w,cy],[ox+w+d,cy-d],[ox+d,cy-d]], '#02C39A20', '#02C39A', 2.5);
+  line(svg, ox,cy,ox+w,cy,'#02C39A',2.5);
+  line(svg, ox+w,cy,ox+w+d,cy-d,'#02C39A',2.5);
+  line(svg, ox+d,cy-d,ox+w+d,cy-d,'#02C39A',2.5);
+  line(svg, ox,cy,ox+d,cy-d,'#02C39A',2.5);
+  text(svg, 235, cy-10,'parallel cut','#028090',11);
+}
+function drawRectPrismPerp(svg) {
+  drawRectPrism(svg);
+  const ox=160, oy=100, w=140, h=130, d=60;
+  const px = ox+60;
+  poly(svg, [[px,oy],[px,oy+h],[px+d,oy+h-d],[px+d,oy-d]], '#F5A62330', '#F5A623', 2.5);
+  line(svg, px,oy,px,oy+h,'#F5A623',2.5);
+  line(svg, px,oy+h,px+d,oy+h-d,'#F5A623',2.5);
+  line(svg, px+d,oy-d,px+d,oy+h-d,'#F5A623',2.5);
+  line(svg, px,oy,px+d,oy-d,'#F5A623',2.5);
+  text(svg, 290, oy-15,'perpendicular cut','#F5A623',11);
+}
+function drawRectPrismDiag(svg) {
+  drawRectPrism(svg);
+  const ox=160, oy=100, w=140, h=130, d=60;
+  const p1=[ox,oy], p2=[ox+w,oy+h], p3=[ox+w+d,oy+h-d-60], p4=[ox+d,oy-d];
+  poly(svg, [p1,p2,p3,p4], '#A32D2D30', '#E24B4A', 2.5);
+  text(svg, 260, 340,'diagonal cut','#E24B4A',11);
+}
+
+// ── CUBE ──────────────────────────────────────────────────────────────
+function drawCube(svg) {
+  const ox=165, oy=100, s=130, d=55;
+  poly(svg, [[ox,oy+s],[ox+s,oy+s],[ox+s,oy],[ox,oy]], '#CECBF6', '#534AB7', 1.5);
+  poly(svg, [[ox,oy],[ox+d,oy-d],[ox+s+d,oy-d],[ox+s,oy]], '#AFA9EC', '#534AB7', 1.5);
+  poly(svg, [[ox+s,oy],[ox+s+d,oy-d],[ox+s+d,oy+s-d],[ox+s,oy+s]], '#7F77DD', '#534AB7', 1.5);
+  line(svg, ox,oy+s,ox+d,oy+s-d,'#534AB7',1,'4 3');
+  line(svg, ox+d,oy+s-d,ox+s+d,oy+s-d,'#534AB7',1,'4 3');
+  line(svg, ox+d,oy+s-d,ox+d,oy-d,'#534AB7',1,'4 3');
+}
+function drawCubeParallel(svg) {
+  drawCube(svg);
+  const ox=165, oy=100, s=130, d=55, cy=oy+60;
+  poly(svg, [[ox,cy],[ox+s,cy],[ox+s+d,cy-d],[ox+d,cy-d]], '#02C39A20', '#02C39A', 2.5);
+  line(svg, ox,cy,ox+s,cy,'#02C39A',2.5);
+  line(svg, ox+s,cy,ox+s+d,cy-d,'#02C39A',2.5);
+  line(svg, ox+d,cy-d,ox+s+d,cy-d,'#02C39A',2.5);
+  line(svg, ox,cy,ox+d,cy-d,'#02C39A',2.5);
+}
+function drawCubePerp(svg) {
+  drawCube(svg);
+  const ox=165, oy=100, s=130, d=55, px=ox+60;
+  poly(svg, [[px,oy],[px,oy+s],[px+d,oy+s-d],[px+d,oy-d]], '#F5A62330', '#F5A623', 2.5);
+  line(svg, px,oy,px,oy+s,'#F5A623',2.5);
+  line(svg, px,oy+s,px+d,oy+s-d,'#F5A623',2.5);
+  line(svg, px+d,oy-d,px+d,oy+s-d,'#F5A623',2.5);
+  line(svg, px,oy,px+d,oy-d,'#F5A623',2.5);
+}
+function drawCubeDiag(svg) {
+  drawCube(svg);
+  const ox=165, oy=100, s=130, d=55;
+  poly(svg, [[ox,oy],[ox+s,oy+s],[ox+s+d,oy+s-d],[ox+d,oy-d]], '#A32D2D30','#E24B4A',2.5);
+}
+
+// ── TRI PRISM ─────────────────────────────────────────────────────────
+function drawTriPrism(svg) {
+  const ax=230,ay=80,bx=130,by=280,cx2=330,cy2=280,d=55;
+  poly(svg, [[ax,ay],[bx,by],[cx2,cy2]], '#F5C4B3','#993C1D',1.5);
+  poly(svg, [[ax,ay],[ax+d,ay-d],[bx+d,by-d],[bx,by]], '#F0997B','#993C1D',1.5);
+  poly(svg, [[bx,by],[bx+d,by-d],[cx2+d,cy2-d],[cx2,cy2]], '#D85A30','#993C1D',1.5);
+  poly(svg, [[ax,ay],[ax+d,ay-d],[cx2+d,cy2-d],[cx2,cy2]], '#E87B55','#993C1D',1.5);
+  line(svg, ax+d,ay-d,bx+d,by-d,'#993C1D',1,'4 3');
+}
+function drawTriPrismParallel(svg) {
+  drawTriPrism(svg);
+  const ax=230,ay=80,bx=130,by=280,cx2=330,cy2=280,d=55,t=0.4;
+  const px=ax+(bx-ax)*t, py=ay+(by-ay)*t;
+  const qx=ax+(cx2-ax)*t, qy=ay+(cy2-ay)*t;
+  const rx=px+d,ry=py-d, sx=qx+d,sy=qy-d;
+  poly(svg, [[px,py],[qx,qy],[sx,sy],[rx,ry]], '#02C39A20','#02C39A',2.5);
+  line(svg, px,py,qx,qy,'#02C39A',2.5);
+  line(svg, qx,qy,sx,sy,'#02C39A',2.5);
+  line(svg, sx,sy,rx,ry,'#02C39A',2.5);
+  line(svg, rx,ry,px,py,'#02C39A',2.5);
+}
+function drawTriPrismPerp(svg) {
+  drawTriPrism(svg);
+  const bx=130,by=280,cx2=330,cy2=280,d=55, px=210,w=40;
+  poly(svg, [[px,by],[px,by-200],[px+d,by-d-200],[px+d,by-d]], '#F5A62330','#F5A623',2.5);
+  line(svg, px,by-5,px,by-190,'#F5A623',2.5);
+}
+
+// ── SQ PYRAMID ────────────────────────────────────────────────────────
+function drawSqPyramid(svg) {
+  const tx=230,ty=60, bx1=130,by1=280,bx2=330,by2=280,bx3=310,by3=230,bx4=150,by4=230;
+  poly(svg, [[tx,ty],[bx1,by1],[bx2,by2]], '#FAC775','#854F0B',1.5);
+  poly(svg, [[tx,ty],[bx2,by2],[bx3,by3]], '#EF9F27','#854F0B',1.5);
+  poly(svg, [[bx1,by1],[bx2,by2],[bx3,by3],[bx4,by4]], '#BA7517','#854F0B',1.5);
+  line(svg, tx,ty,bx4,by4,'#854F0B',1,'4 3');
+  line(svg, bx1,by1,bx4,by4,'#854F0B',1,'4 3');
+  line(svg, bx4,by4,bx3,by3,'#854F0B',1,'4 3');
+}
+function drawSqPyrParallel(svg) {
+  drawSqPyramid(svg);
+  const t=0.45;
+  const pts = [[130,280],[330,280],[310,230],[150,230]];
+  const apex = [230,60];
+  const cut = pts.map(([x,y]) => [apex[0]+(x-apex[0])*(1-t), apex[1]+(y-apex[1])*(1-t)]);
+  poly(svg, cut, '#02C39A20','#02C39A',2.5);
+  cut.forEach((p,i) => { const n=cut[(i+1)%4]; line(svg,p[0],p[1],n[0],n[1],'#02C39A',2.5); });
+}
+function drawSqPyrApex(svg) {
+  drawSqPyramid(svg);
+  line(svg, 230,60, 230,280,'#F5A623',2.5);
+  line(svg, 230,60, 310,230,'#F5A623',2.5);
+  line(svg, 230,280, 310,230,'#F5A623',2.5);
+}
+
+// ── CONE ─────────────────────────────────────────────────────────────
+function drawCone(svg) {
+  ellipse(svg, 230,270,100,28,'#F5C4B380','#993C1D',1.5);
+  path(svg, 'M130,270 L230,70 L330,270','none','#993C1D',1.5);
+  ellipse(svg, 230,270,100,28,'none','#993C1D',1.5,'4 3');
+}
+function drawConeParallel(svg) {
+  drawCone(svg);
+  const t=0.4, cy=270-200*t, rx=100*t*1.1;
+  ellipse(svg, 230,cy,rx,rx*0.28,'#02C39A20','#02C39A',2.5);
+}
+function drawConeApex(svg) {
+  drawCone(svg);
+  line(svg, 230,70,230,270,'#F5A623',2.5);
+  path(svg,'M130,270 L230,70 L330,270','none','#F5A623',2.5);
+}
+function drawConeAngle(svg) {
+  drawCone(svg);
+  path(svg,'M140,200 Q230,310 320,160','none','#E24B4A',2.5);
+  ellipse(svg, 228,230,85,30,'#A32D2D20','#E24B4A',2.5);
+}
+
+// ── CYLINDER ─────────────────────────────────────────────────────────
+function drawCylinder(svg) {
+  rect(svg, 130,100,200,170,'#9FE1CB80','#0F6E56',1.5);
+  ellipse(svg, 230,100,100,28,'#5DCAA5','#0F6E56',1.5);
+  ellipse(svg, 230,270,100,28,'#1D9E75','#0F6E56',1.5);
+  line(svg, 130,100,130,270,'#0F6E56',1.5);
+  line(svg, 330,100,330,270,'#0F6E56',1.5);
+  ellipse(svg, 230,270,100,28,'none','#0F6E56',1.5,'4 3');
+}
+function drawCylParallel(svg) {
+  drawCylinder(svg);
+  ellipse(svg, 230,175,100,28,'#02C39A20','#02C39A',2.5);
+}
+function drawCylPerp(svg) {
+  drawCylinder(svg);
+  rect(svg, 190,100,80,170,'#F5A62320','#F5A623',2.5);
+}
+
+// ── Cross-section shapes ──────────────────────────────────────────────
+function drawRectCS(svg) {
+  rect(svg, 30,15,120,70,'#E6F1FB','#185FA5',2);
+  text(svg, 90,95,'Rectangle','#185FA5',12,true);
+}
+function drawSquareCS(svg) {
+  rect(svg, 40,10,100,80,'#EEEDFE','#534AB7',2);
+  text(svg, 90,100,'Square','#534AB7',12,true);
+}
+function drawTriCS(svg) {
+  poly(svg, [[90,10],[20,90],[160,90]],'#FAEEDA','#854F0B',2);
+  text(svg, 90,100,'Triangle','#854F0B',12,true);
+}
+function drawCircleCS(svg) {
+  ellipse(svg, 90,45,50,40,'#E1F5EE','#0F6E56',2);
+  text(svg, 90,98,'Circle','#0F6E56',12,true);
+}
+function drawParallelCS(svg) {
+  poly(svg, [[50,85],[20,15],[130,15],[160,85]],'#FFF3F3','#E24B4A',2);
+  text(svg, 90,100,'Parallelogram','#E24B4A',11,true);
+}
+function drawEllipseCS(svg) {
+  ellipse(svg, 90,48,72,32,'#E1F5EE','#0F6E56',2);
+  text(svg, 90,98,'Ellipse','#0F6E56',12,true);
+}
+
+// Init
+renderCutControls();
+render();
+</script>
+</body>
+</html>

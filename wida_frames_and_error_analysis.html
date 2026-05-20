@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WIDA Frames & Error Analysis / Marcos WIDA y Análisis de Errores</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #F7F9FB; color: #1E293B; }
+  header { background: #1A2E4A; color: white; padding: 1rem 1.5rem; }
+  header h1 { font-size: 1.2rem; font-weight: 600; }
+  header p { font-size: 0.82rem; color: #9DC8D6; font-style: italic; margin-top: 2px; }
+  nav { display: flex; border-bottom: 2px solid #E2E8F0; background: white; }
+  nav button { flex: 1; padding: 12px 8px; border: none; background: none; cursor: pointer; font-size: 13px; font-weight: 500; color: #64748B; border-bottom: 3px solid transparent; transition: all .15s; }
+  nav button.active { color: #028090; border-bottom-color: #028090; background: #F0FDFA; }
+  nav button:hover:not(.active) { color: #1A2E4A; background: #F8FAFC; }
+  .tab { display: none; padding: 1.2rem; }
+  .tab.active { display: block; }
+
+  /* ── WIDA TAB ───── */
+  .wida-intro { background: #E6F1FB; border-left: 4px solid #185FA5; padding: 10px 14px; border-radius: 4px; margin-bottom: 1rem; font-size: 13px; color: #185FA5; }
+  .topic-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .topic-btn { padding: 6px 14px; border: 1.5px solid #E2E8F0; border-radius: 20px; background: white; cursor: pointer; font-size: 12px; font-weight: 500; color: #64748B; transition: all .15s; }
+  .topic-btn:hover { border-color: #028090; color: #028090; }
+  .topic-btn.active { background: #028090; border-color: #028090; color: white; }
+  .level-grid { display: grid; gap: 12px; }
+  .level-card { border-radius: 10px; overflow: hidden; border: 1.5px solid; }
+  .level-head { padding: 8px 14px; display: flex; align-items: center; gap: 10px; }
+  .level-badge { font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 12px; background: rgba(255,255,255,.25); color: white; }
+  .level-name { font-size: 14px; font-weight: 600; color: white; }
+  .level-prompt { font-size: 11px; color: rgba(255,255,255,.8); margin-left: auto; font-style: italic; }
+  .level-body { padding: 12px 14px; background: white; }
+  .frame-en { font-size: 14px; color: #1E293B; margin-bottom: 6px; line-height: 1.6; }
+  .frame-es { font-size: 13px; color: #64748B; font-style: italic; line-height: 1.6; }
+  .blank { display: inline-block; border-bottom: 2px solid; min-width: 80px; color: transparent; }
+  .word-bank { margin-top: 10px; padding: 8px 12px; background: #F8FAFC; border-radius: 6px; }
+  .word-bank-label { font-size: 10px; color: #94A3B8; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+  .word-tag { display: inline-block; background: white; border: 1px solid #E2E8F0; border-radius: 4px; padding: 2px 8px; margin: 2px; font-size: 12px; color: #1E293B; }
+  .answer-btn { font-size: 11px; padding: 3px 10px; border: 1px solid #E2E8F0; border-radius: 6px; background: white; cursor: pointer; color: #94A3B8; margin-top: 8px; }
+  .answer-btn:hover { border-color: #028090; color: #028090; }
+  .answer { display: none; margin-top: 8px; padding: 8px 12px; background: #F0FDF4; border-radius: 6px; font-size: 13px; color: #0F6E56; line-height: 1.6; }
+  .print-btn { float: right; padding: 6px 14px; border: 1.5px solid #028090; border-radius: 6px; background: white; cursor: pointer; color: #028090; font-size: 12px; font-weight: 500; }
+  .print-btn:hover { background: #028090; color: white; }
+
+  /* ── ERROR TAB ───── */
+  .error-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+  .error-card { background: white; border-radius: 12px; border: 1.5px solid #E2E8F0; overflow: hidden; }
+  .ec-head { background: #FFF3F3; border-bottom: 2px solid #E24B4A; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+  .ec-head-num { font-size: 11px; font-weight: 700; padding: 2px 8px; background: #E24B4A; color: white; border-radius: 12px; }
+  .ec-head-title { font-size: 13px; font-weight: 600; color: #A32D2D; }
+  .ec-body { padding: 14px; }
+  .error-statement { background: #FFF3F3; border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; position: relative; }
+  .error-statement::before { content: '✗'; color: #E24B4A; font-size: 18px; font-weight: 700; position: absolute; top: 8px; right: 12px; }
+  .error-statement .label { font-size: 10px; color: #E24B4A; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+  .error-statement .stmt { font-size: 13px; color: #A32D2D; line-height: 1.5; }
+  .error-statement .stmt-es { font-size: 12px; color: #C27A7A; font-style: italic; margin-top: 4px; line-height: 1.5; }
+  .question-box { background: #EFF6FF; border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; }
+  .question-box .qlabel { font-size: 10px; color: #185FA5; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+  .question-box .q { font-size: 13px; color: #185FA5; font-weight: 500; }
+  .correction-btn { width: 100%; padding: 8px; border: 1.5px solid #0F6E56; border-radius: 8px; background: white; cursor: pointer; color: #0F6E56; font-size: 12px; font-weight: 500; transition: all .15s; }
+  .correction-btn:hover { background: #0F6E56; color: white; }
+  .correction { display: none; background: #F0FDF4; border-radius: 8px; padding: 12px 14px; margin-top: 10px; }
+  .correction .clabel { font-size: 10px; color: #0F6E56; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+  .correction .ct { font-size: 13px; color: #1E293B; line-height: 1.6; }
+  .correction .ctes { font-size: 12px; color: #64748B; font-style: italic; margin-top: 4px; line-height: 1.6; }
+  .frame-correction { margin-top: 10px; padding: 8px 12px; background: #1A2E4A; border-radius: 6px; font-size: 12px; color: #B0C4D8; }
+  .frame-correction strong { color: #F5A623; }
+  .correct-icon { color: #0F6E56; margin-right: 4px; }
+  .diff-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  .diff-table th { background: #F1F5F9; padding: 4px 8px; text-align: left; color: #64748B; }
+  .diff-table td { padding: 4px 8px; border-top: 1px solid #F1F5F9; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📝 WIDA Sentence Frames & Error Analysis / Marcos de Oración WIDA y Análisis de Errores</h1>
+  <p>Scaffolded language support for multilingual geometry learners / Apoyo lingüístico para estudiantes multilingüe de geometría</p>
+</header>
+<nav>
+  <button class="active" onclick="switchTab('wida')">📋 WIDA Sentence Frames</button>
+  <button onclick="switchTab('error')">❌ Error Analysis</button>
+</nav>
+
+<!-- ══ WIDA TAB ══════════════════════════════════════════════════════ -->
+<div class="tab active" id="tab-wida">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+    <div style="flex:1;font-size:13px;color:#64748B;">Choose a topic / Elige un tema:</div>
+    <button class="print-btn" onclick="window.print()">🖨 Print</button>
+  </div>
+  <div class="topic-bar" id="topic-bar"></div>
+  <div class="level-grid" id="level-grid"></div>
+</div>
+
+<!-- ══ ERROR TAB ══════════════════════════════════════════════════════ -->
+<div class="tab" id="tab-error">
+  <div class="wida-intro" style="background:#FFF3F3;border-color:#E24B4A;color:#A32D2D;margin-bottom:1rem;">
+    <strong>Error Analysis / Análisis de Errores:</strong> Read each error carefully. Can you identify the mistake? Then click "Show Correction" to check. / Lee cada error cuidadosamente. ¿Puedes identificar el error? Luego haz clic para verificar.
+  </div>
+  <div class="error-grid" id="error-grid"></div>
+</div>
+
+<script>
+// ── WIDA DATA ───────────────────────────────────────────────────────
+const TOPICS = [
+  {
+    id: 'identify',
+    label: 'Identify solids / Identificar sólidos',
+    levels: [
+      {
+        num: 1, name: 'Level 1 — Entering', color: '#E24B4A',
+        prompt: 'Point & name / Señalar y nombrar',
+        en: 'This is a ___.',
+        es: 'Este es un ___.',
+        wordBank: ['cube / cubo', 'pyramid / pirámide', 'prism / prisma', 'face / cara', 'edge / arista', 'vertex / vértice'],
+        answer: 'This is a cube. / Este es un cubo.'
+      },
+      {
+        num: 2, name: 'Level 2 — Emerging', color: '#BA7517',
+        prompt: 'Sentence with support / Oración con apoyo',
+        en: 'This is a ___. It has ___ faces.',
+        es: 'Este es un ___. Tiene ___ caras.',
+        wordBank: ['triangular prism', 'rectangular prism', 'square pyramid', '4', '5', '6', '8'],
+        answer: 'This is a rectangular prism. It has 6 faces. / Este es un prisma rectangular. Tiene 6 caras.'
+      },
+      {
+        num: 3, name: 'Level 3 — Developing', color: '#185FA5',
+        prompt: 'Explain properties / Explicar propiedades',
+        en: 'This solid is a ___ because it has ___ faces, ___ edges, and ___ vertices.',
+        es: 'Este sólido es un ___ porque tiene ___ caras, ___ aristas y ___ vértices.',
+        wordBank: ['cube', 'triangular prism', 'square pyramid', '6', '5', '9', '12', '8', '6'],
+        answer: 'This solid is a cube because it has 6 faces, 12 edges, and 8 vertices.'
+      },
+      {
+        num: 4, name: 'Level 4 — Expanding', color: '#0F6E56',
+        prompt: 'Compare & classify / Comparar y clasificar',
+        en: 'Both the ___ and ___ are ___ because ___. However, they differ in that ___.',
+        es: 'Tanto el ___ como el ___ son ___ porque ___. Sin embargo, se diferencian en que ___.',
+        wordBank: ['cube', 'rectangular prism', 'prisms', 'they both have two identical bases', 'the cube has square faces while the prism has rectangular faces'],
+        answer: 'Both the cube and the rectangular prism are prisms because they both have two identical bases. However, they differ in that the cube has square faces while the rectangular prism has rectangular faces.'
+      },
+    ]
+  },
+  {
+    id: 'nets',
+    label: 'Nets / Redes',
+    levels: [
+      {
+        num: 1, name: 'Level 1 — Entering', color: '#E24B4A',
+        prompt: 'Point & name / Señalar y nombrar',
+        en: 'Net. Square. Triangle. Rectangle.',
+        es: 'Red. Cuadrado. Triángulo. Rectángulo.',
+        wordBank: ['net / red', 'fold / doblar', 'unfold / desdoblar', 'flat / plano', 'square / cuadrado'],
+        answer: 'A net is the flat shape that folds into a 3D solid. / Una red es la figura plana que se dobla para formar un sólido 3D.'
+      },
+      {
+        num: 2, name: 'Level 2 — Emerging', color: '#BA7517',
+        prompt: 'Describe the net / Describir la red',
+        en: 'The net has ___ squares / rectangles / triangles.',
+        es: 'La red tiene ___ cuadrados / rectángulos / triángulos.',
+        wordBank: ['2', '4', '6', 'squares', 'triangles', 'rectangles'],
+        answer: 'The net has 6 squares. When folded, they make a cube. / La red tiene 6 cuadrados. Al doblarlos, forman un cubo.'
+      },
+      {
+        num: 3, name: 'Level 3 — Developing', color: '#185FA5',
+        prompt: 'Explain how / Explicar cómo',
+        en: 'The net of a ___ has ___ because when you fold it, ___.',
+        es: 'La red de un ___ tiene ___ porque cuando la doblas, ___.',
+        wordBank: ['triangular prism', '2 triangles + 3 rectangles', 'you get a solid with 5 faces'],
+        answer: 'The net of a triangular prism has 2 triangles and 3 rectangles because when you fold it, you get a solid with 5 faces.'
+      },
+      {
+        num: 4, name: 'Level 4 — Expanding', color: '#0F6E56',
+        prompt: 'Analyze & compare / Analizar y comparar',
+        en: 'The net of a ___ and the net of a ___ are similar because both ___. However, ___.',
+        es: 'La red de un ___ y la red de un ___ son similares porque ambos ___. Sin embargo, ___.',
+        wordBank: ['cube', 'rectangular prism', 'contain 6 polygons that are all quadrilaterals', 'a cube\'s net uses only squares while a rectangular prism uses rectangles of different sizes'],
+        answer: 'The net of a cube and the net of a rectangular prism are similar because both contain 6 quadrilaterals. However, a cube\'s net uses only squares while a rectangular prism uses rectangles of different sizes.'
+      },
+    ]
+  },
+  {
+    id: 'cross',
+    label: 'Cross Sections / Secciones',
+    levels: [
+      {
+        num: 1, name: 'Level 1 — Entering', color: '#E24B4A',
+        prompt: 'Name the shape / Nombrar la figura',
+        en: 'Circle. Square. Triangle. Rectangle.',
+        es: 'Círculo. Cuadrado. Triángulo. Rectángulo.',
+        wordBank: ['circle / círculo', 'rectangle / rectángulo', 'triangle / triángulo', 'cut / corte', 'slice / rebanada'],
+        answer: 'Cross section = the shape you see when you cut a solid. / Sección transversal = la figura que ves cuando cortas un sólido.'
+      },
+      {
+        num: 2, name: 'Level 2 — Emerging', color: '#BA7517',
+        prompt: 'Name the cross section / Nombrar la sección',
+        en: 'When I cut the ___ parallel to the base, I see a ___.',
+        es: 'Cuando corto el ___ paralelo a la base, veo un ___.',
+        wordBank: ['cube', 'rectangular prism', 'cone', 'square', 'rectangle', 'circle'],
+        answer: 'When I cut the cube parallel to the base, I see a square. / Cuando corto el cubo paralelo a la base, veo un cuadrado.'
+      },
+      {
+        num: 3, name: 'Level 3 — Developing', color: '#185FA5',
+        prompt: 'Explain why / Explicar por qué',
+        en: 'When I cut the ___ ___ the base, the cross section is a ___ because ___.',
+        es: 'Cuando corto el ___ ___ a la base, la sección transversal es un ___ porque ___.',
+        wordBank: ['square pyramid', 'parallel to', 'square', 'all horizontal cuts through a pyramid reveal the same shape as the base, only smaller'],
+        answer: 'When I cut the square pyramid parallel to the base, the cross section is a square because horizontal cuts reveal the same shape as the base, only smaller near the apex.'
+      },
+      {
+        num: 4, name: 'Level 4 — Expanding', color: '#0F6E56',
+        prompt: 'Predict & analyze / Predecir y analizar',
+        en: 'I predict that cutting the ___ at a ___ angle will produce a ___ because ___. This differs from a ___ cut because ___.',
+        es: 'Predigo que cortar el ___ en ángulo ___ producirá un ___ porque ___. Esto difiere de un corte ___ porque ___.',
+        wordBank: ['cone', 'diagonal', 'ellipse', 'the plane intersects the curved surface at an angle', 'horizontal (parallel)', 'a horizontal cut produces a circle'],
+        answer: 'I predict that cutting the cone at a diagonal angle will produce an ellipse because the plane intersects the curved surface at an angle. This differs from a horizontal cut because a horizontal cut produces a circle.'
+      },
+    ]
+  },
+  {
+    id: 'euler',
+    label: "Euler's Formula / Fórmula de Euler",
+    levels: [
+      {
+        num: 1, name: 'Level 1 — Entering', color: '#E24B4A',
+        prompt: 'Count / Contar',
+        en: '___ faces. ___ edges. ___ vertices.',
+        es: '___ caras. ___ aristas. ___ vértices.',
+        wordBank: ['face / cara', 'edge / arista', 'vertex / vértice', '4', '5', '6', '8', '12'],
+        answer: '6 faces. 12 edges. 8 vertices. (cube) / 6 caras. 12 aristas. 8 vértices. (cubo)'
+      },
+      {
+        num: 2, name: 'Level 2 — Emerging', color: '#BA7517',
+        prompt: 'Apply the formula / Aplicar la fórmula',
+        en: 'The ___ has ___ faces, ___ edges, and ___ vertices. F + V − E = ___.',
+        es: 'El ___ tiene ___ caras, ___ aristas y ___ vértices. C + V − A = ___.',
+        wordBank: ['cube', 'triangular prism', '6', '5', '12', '9', '8', '6', '2'],
+        answer: 'The cube has 6 faces, 12 edges, and 8 vertices. F + V − E = 6 + 8 − 12 = 2.'
+      },
+      {
+        num: 3, name: 'Level 3 — Developing', color: '#185FA5',
+        prompt: 'Verify & explain / Verificar y explicar',
+        en: 'For the ___, F + V − E = ___ + ___ − ___ = ___. This ___ Euler\'s Formula because ___.',
+        es: 'Para el ___, C + V − A = ___ + ___ − ___ = ___. Esto ___ la fórmula de Euler porque ___.',
+        wordBank: ['square pyramid', '5', '5', '8', '2', 'confirms', 'the result equals 2 for every polyhedron I tested'],
+        answer: 'For the square pyramid, F + V − E = 5 + 5 − 8 = 2. This confirms Euler\'s Formula because the result equals 2.'
+      },
+      {
+        num: 4, name: 'Level 4 — Expanding', color: '#0F6E56',
+        prompt: 'Generalize & question / Generalizar y cuestionar',
+        en: "Based on the evidence, Euler's Formula (F + V − E = 2) appears to be a ___ for all convex polyhedra. However, I wonder whether ___ because ___.",
+        es: 'Según la evidencia, la fórmula de Euler parece ser ___ para todos los poliedros convexos. Sin embargo, me pregunto si ___ porque ___.',
+        wordBank: ['universal rule', 'it applies to non-convex solids like a torus (donut shape)', 'a torus has no vertices, faces, or edges in the traditional sense, so F+V-E might not equal 2'],
+        answer: "Based on the evidence, Euler's Formula appears to be a universal rule for convex polyhedra. However, for a torus (donut), F+V-E = 0, not 2 — so the formula has limits."
+      },
+    ]
+  },
+];
+
+// ── ERROR DATA ──────────────────────────────────────────────────────
+const ERRORS = [
+  {
+    num: 1,
+    title: 'Pyramid vs. Prism',
+    errorEn: '"The solid has a rectangular base, so it must be a rectangular pyramid."',
+    errorEs: '"El sólido tiene una base rectangular, entonces debe ser una pirámide rectangular."',
+    question: 'What is wrong with this reasoning? What is the actual name of the solid?',
+    questionEs: '¿Qué está mal con este razonamiento? ¿Cuál es el nombre real del sólido?',
+    correctionEn: 'A pyramid has ONE base and triangular lateral faces that meet at an apex. This solid has TWO rectangular bases and rectangular lateral faces — it is a rectangular PRISM.',
+    correctionEs: 'Una pirámide tiene UNA base y caras laterales triangulares que se unen en un ápice. Este sólido tiene DOS bases rectangulares y caras laterales rectangulares — es un PRISMA rectangular.',
+    frame: '<strong>Correction frame:</strong> This solid is NOT a pyramid because ___. Instead, it is a ___ because it has ___.',
+    frameEs: '<strong>Marco de corrección:</strong> Este sólido NO es una pirámide porque ___. En cambio, es un ___ porque tiene ___.',
+    table: [['', 'Pyramid / Pirámide', 'Prism / Prisma'],['Bases / Bases', '1', '2'],['Lateral faces / Caras laterales', 'Triangles / Triángulos', 'Rectangles / Rectángulos'],['Meets at / Se une en', 'Apex / Ápice', 'Never / Nunca']]
+  },
+  {
+    num: 2,
+    title: "Euler's Formula error",
+    errorEn: '"The triangular prism has 5 faces, 6 edges, and 6 vertices. F + V − E = 5 + 6 − 6 = 5."',
+    errorEs: '"El prisma triangular tiene 5 caras, 6 aristas y 6 vértices. C + V − A = 5 + 6 − 6 = 5."',
+    question: 'Find the mistake in the face/edge/vertex count. What is the correct calculation?',
+    questionEs: 'Encuentra el error en el conteo. ¿Cuál es el cálculo correcto?',
+    correctionEn: 'The error is in the edge count. A triangular prism has 9 edges (3 on each triangular face + 3 connecting edges), not 6. Correct: F + V − E = 5 + 6 − 9 = 2 ✓',
+    correctionEs: 'El error está en el conteo de aristas. Un prisma triangular tiene 9 aristas (3 en cada cara triangular + 3 de conexión), no 6. Correcto: C + V − A = 5 + 6 − 9 = 2 ✓',
+    frame: '<strong>Correction frame:</strong> The error was in the ___. The correct count is ___ because ___. Therefore F + V − E = ___ = 2.',
+    frameEs: '<strong>Marco de corrección:</strong> El error estaba en ___. El conteo correcto es ___ porque ___. Por lo tanto C + V − A = ___ = 2.',
+    table: [['', 'Wrong / Incorrecto', 'Correct / Correcto'],['Faces / Caras (F)', '5', '5'],['Vertices / Vértices (V)', '6', '6'],['Edges / Aristas (E)', '6 ❌', '9 ✓']]
+  },
+  {
+    num: 3,
+    title: 'Cross section mistake',
+    errorEn: '"When I cut a rectangular prism parallel to the base, I get a triangle."',
+    errorEs: '"Cuando corto un prisma rectangular paralelo a la base, obtengo un triángulo."',
+    question: 'Is this correct? What shape do you actually get, and why?',
+    questionEs: '¿Es esto correcto? ¿Qué figura obtienes realmente, y por qué?',
+    correctionEn: 'A rectangular prism has rectangular bases. A cut parallel to the base reveals the same shape as the base — a rectangle. A triangle would only appear in a cut through a triangular prism or pyramid.',
+    correctionEs: 'Un prisma rectangular tiene bases rectangulares. Un corte paralelo a la base revela la misma forma que la base — un rectángulo. Un triángulo solo aparecería en un prisma triangular o pirámide.',
+    frame: '<strong>Correction frame:</strong> The cross section of a ___ cut ___ to the base is a ___, not a triangle, because ___.',
+    frameEs: '<strong>Marco de corrección:</strong> La sección transversal de un ___ cortado ___ a la base es un ___, no un triángulo, porque ___.',
+    table: [['Solid / Sólido', '∥ Cut / Corte ∥','⊥ Cut / Corte ⊥'],['Cube / Cubo','Square / Cuadrado','Square / Cuadrado'],['Rect. Prism / Prisma rect.','Rectangle / Rectángulo','Rectangle / Rectángulo'],['Tri. Prism / Prisma triang.','Triangle / Triángulo','Rectangle / Rectángulo']]
+  },
+  {
+    num: 4,
+    title: 'Net identification',
+    errorEn: '"A net with 4 triangles is the net of a triangular prism."',
+    errorEs: '"Una red con 4 triángulos es la red de un prisma triangular."',
+    question: 'What solid has a net with 4 triangles? What is the net of a triangular prism?',
+    questionEs: '¿Qué sólido tiene una red con 4 triángulos? ¿Cuál es la red de un prisma triangular?',
+    correctionEn: '4 triangles = the net of a triangular PYRAMID (tetrahedron). A triangular PRISM has 2 triangles + 3 rectangles in its net (5 faces total, not 4).',
+    correctionEs: '4 triángulos = la red de una PIRÁMIDE triangular (tetraedro). Un PRISMA triangular tiene 2 triángulos + 3 rectángulos en su red (5 caras en total, no 4).',
+    frame: '<strong>Correction frame:</strong> A net with 4 triangles belongs to a ___, not a ___. A triangular prism\'s net has ___ because ___.',
+    frameEs: '<strong>Marco de corrección:</strong> Una red con 4 triángulos pertenece a un ___, no a un ___. La red de un prisma triangular tiene ___ porque ___.',
+    table: [['Solid / Sólido', 'Net shapes / Formas en la red', 'Faces / Caras'],['Tri. Pyramid / Pirámide triang.','4 triangles / 4 triángulos','4'],['Tri. Prism / Prisma triang.','2 triangles + 3 rectangles','5'],['Sq. Pyramid / Pirámide cuad.','1 square + 4 triangles','5']]
+  },
+  {
+    num: 5,
+    title: 'Counting vertices',
+    errorEn: '"A square pyramid has 4 vertices — one at each corner of the square base."',
+    errorEs: '"Una pirámide cuadrada tiene 4 vértices — uno en cada esquina de la base cuadrada."',
+    question: 'What vertex is the student forgetting?',
+    questionEs: '¿Qué vértice está olvidando el estudiante?',
+    correctionEn: 'A square pyramid has 5 vertices — 4 at the base corners AND 1 at the apex (the top point). Vertices are all corner points, including the apex!',
+    correctionEs: 'Una pirámide cuadrada tiene 5 vértices — 4 en las esquinas de la base Y 1 en el ápice (el punto superior). ¡Los vértices son todos los puntos de las esquinas, incluido el ápice!',
+    frame: '<strong>Correction frame:</strong> A square pyramid actually has ___ vertices: ___ at the base + ___ at the ___. The student forgot to count the ___.',
+    frameEs: '<strong>Marco de corrección:</strong> Una pirámide cuadrada tiene en realidad ___ vértices: ___ en la base + ___ en el ___. El estudiante olvidó contar el ___.',
+    table: [['Part / Parte', 'Count / Conteo', 'Note / Nota'],['Base corners / Esquinas de la base','4','One at each corner / Una en cada esquina'],['Apex / Ápice','1','The top point! / ¡El punto superior!'],['TOTAL / TOTAL','5','Don\'t forget the apex!']]
+  },
+  {
+    num: 6,
+    title: 'Polyhedron or not?',
+    errorEn: '"A cylinder is a polyhedron because it is a 3D solid with faces."',
+    errorEs: '"Un cilindro es un poliedro porque es un sólido 3D con caras."',
+    question: 'What makes something a polyhedron? Why is a cylinder NOT a polyhedron?',
+    questionEs: '¿Qué hace que algo sea un poliedro? ¿Por qué un cilindro NO es un poliedro?',
+    correctionEn: 'A polyhedron must have FLAT faces, STRAIGHT edges, and VERTICES. A cylinder has curved surfaces — its side is curved, not flat. Therefore it is NOT a polyhedron.',
+    correctionEs: 'Un poliedro debe tener caras PLANAS, aristas RECTAS y vértices. Un cilindro tiene superficies curvas — su lado es curvo, no plano. Por lo tanto, NO es un poliedro.',
+    frame: '<strong>Correction frame:</strong> A cylinder is NOT a polyhedron because ___. A polyhedron must have ___. Examples of non-polyhedra include ___.',
+    frameEs: '<strong>Marco de corrección:</strong> Un cilindro NO es un poliedro porque ___. Un poliedro debe tener ___. Ejemplos de no-poliedros incluyen ___.',
+    table: [['', 'Polyhedron? / ¿Poliedro?', 'Reason / Razón'],['Cube / Cubo','✓ Yes','Flat faces, straight edges'],['Pyramid / Pirámide','✓ Yes','Flat faces, straight edges'],['Cylinder / Cilindro','✗ No','Curved surface'],['Cone / Cono','✗ No','Curved surface'],['Sphere / Esfera','✗ No','Entirely curved']]
+  },
+];
+
+// ── RENDER WIDA ──────────────────────────────────────────────────────
+let activeTopic = 'identify';
+const revealed = {};
+
+function renderTopicBar() {
+  document.getElementById('topic-bar').innerHTML = TOPICS.map(t =>
+    `<button class="topic-btn${t.id===activeTopic?' active':''}" onclick="setTopic('${t.id}')">${t.label}</button>`
+  ).join('');
+}
+
+function setTopic(id) {
+  activeTopic = id;
+  renderTopicBar();
+  renderLevels();
+}
+
+function renderLevels() {
+  const topic = TOPICS.find(t=>t.id===activeTopic);
+  const levelColors = { 1:'#E24B4A', 2:'#BA7517', 3:'#185FA5', 4:'#0F6E56' };
+  document.getElementById('level-grid').innerHTML = topic.levels.map(lv => {
+    const rk = activeTopic+'-'+lv.num;
+    return `
+    <div class="level-card" style="border-color:${lv.color}40">
+      <div class="level-head" style="background:${lv.color}">
+        <span class="level-badge">${lv.num}</span>
+        <span class="level-name">${lv.name}</span>
+        <span class="level-prompt">${lv.prompt}</span>
+      </div>
+      <div class="level-body">
+        <div class="frame-en">${lv.en.replace(/___/g, `<span class="blank" style="border-color:${lv.color}">___</span>`)}</div>
+        <div class="frame-es">${lv.es.replace(/___/g, `<span class="blank" style="border-color:${lv.color}8080">___</span>`)}</div>
+        <div class="word-bank">
+          <div class="word-bank-label">Word bank / Banco de palabras</div>
+          ${lv.wordBank.map(w=>`<span class="word-tag">${w}</span>`).join('')}
+        </div>
+        <button class="answer-btn" onclick="toggleAnswer('${rk}')">Show sample answer / Ver respuesta de muestra</button>
+        <div class="answer" id="ans-${rk}">${lv.answer}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleAnswer(k) {
+  const el = document.getElementById('ans-'+k);
+  el.style.display = el.style.display==='block' ? 'none' : 'block';
+}
+
+// ── RENDER ERRORS ────────────────────────────────────────────────────
+function renderErrors() {
+  document.getElementById('error-grid').innerHTML = ERRORS.map(e => {
+    const tk = 'err-'+e.num;
+    const tableHtml = e.table ? `<table class="diff-table">${e.table.map((row,ri)=>`<tr>${row.map((cell,ci)=>(ri===0||ci===0)?`<th>${cell}</th>`:`<td>${cell}</td>`).join('')}</tr>`).join('')}</table>` : '';
+    return `
+    <div class="error-card">
+      <div class="ec-head">
+        <span class="ec-head-num">#${e.num}</span>
+        <span class="ec-head-title">${e.title}</span>
+      </div>
+      <div class="ec-body">
+        <div class="error-statement">
+          <div class="label">The Error / El Error</div>
+          <div class="stmt">${e.errorEn}</div>
+          <div class="stmt-es">${e.errorEs}</div>
+        </div>
+        <div class="question-box">
+          <div class="qlabel">❓ Your turn / Tu turno</div>
+          <div class="q">${e.question}</div>
+          <div class="q" style="font-size:12px;color:#94A3B8;font-style:italic;margin-top:3px;">${e.questionEs}</div>
+        </div>
+        <button class="correction-btn" onclick="toggleCorrection('${tk}')">✓ Show Correction / Mostrar Corrección</button>
+        <div class="correction" id="${tk}">
+          <div class="clabel">✓ Correct / Correcto</div>
+          <div class="ct">${e.correctionEn}</div>
+          <div class="ctes">${e.correctionEs}</div>
+          ${tableHtml}
+          <div class="frame-correction">${e.frame}<br><em>${e.frameEs}</em></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCorrection(k) {
+  const el = document.getElementById(k);
+  el.style.display = el.style.display==='block' ? 'none' : 'block';
+}
+
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Init
+renderTopicBar();
+renderLevels();
+renderErrors();
+</script>
+</body>
+</html>
